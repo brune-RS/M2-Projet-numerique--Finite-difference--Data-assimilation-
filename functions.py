@@ -12,7 +12,20 @@ def integral(Uin,dx):
 
 
 
+#___________________________________________
+#surface temperature boundary condition
+def temp_cycle (tt,dt):
 
+    omega = 2*np.pi/(24) #minutes
+    temp = 5 * ( 1.5 + np.sin(omega*tt) )
+
+    m_series = np.empty(len(tt))  # empty array of Nstep values. We could have made an array of zeros with np.zeros, too.
+    m = 0.
+
+    for i in range(len(tt)):
+        m = m + (temp[i] - 0.5 * m)*dt
+        m_series[i] = m
+    return m_series
 #__________________________________________________________________________________
 #create observation files at 5 cm and 10 cm depth 
 
