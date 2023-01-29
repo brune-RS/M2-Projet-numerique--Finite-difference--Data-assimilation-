@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import norm
 import math
+import scipy.optimize as so
 
 #______________________________________________________
 def gauss(x,mu,s):
@@ -9,6 +10,15 @@ def gauss(x,mu,s):
         return f
 def integral(Uin,dx):
      return np.sum(Uin*dx) 
+    
+def RMSE(exact_solution, num_solution):
+
+    mean_of_differences_squared = ((exact_solution- num_solution)**2).mean() 
+
+    rmse_val = np.sqrt(mean_of_differences_squared)         
+
+    return rmse_val          
+
 
 #___________________________________________
 #surface temperature boundary condition
@@ -71,7 +81,7 @@ def analytical_solution(dx,limx,dt,limt,K,plot=0):
                 ubis[it,ixx]=u[it,ix]
                 ixx+=1    
         if plot==1:
-            if it%20==0:
+            if it%10==0:
                 plt.plot(xx,ubis[it,:],label='t='+str(it)+' s')
                 plt.legend()
                 plt.xlabel('Space domain (cm)')
@@ -86,10 +96,6 @@ def analytical_solution(dx,limx,dt,limt,K,plot=0):
 def euler_f(dx,limx,dt,limt,K,plot=0):
     #PARAMETERS
 #_________________,_______________________________________
-#dx=[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,2,5,10]
-    dX=0.1
-    #limx=100
-    XX=np.arange(0,limx,dX)
     xx=np.arange(0,limx,dx)
 
     #domaine temporel  (en h)
@@ -173,7 +179,7 @@ def euler_b(dx,limx,dt,limt,K,plot=0):
 
 
 
-def Dufort_Frankel(dx,limx,dt,limt,K):
+def Dufort_Frankel(dx,limx,dt,limt,Tf,K,plot=0):
     xx=np.arange(0,limx,dx)
    
     tt=np.arange(0,limt,dt)
@@ -196,15 +202,72 @@ def Dufort_Frankel(dx,limx,dt,limt,K):
 
         for j in range(0,len(xx)-1):
             Td[i,j]=Td[i-2,j]*((1-A)/(1+A)) + (A/(1+A))* (Td[i-1,j-1]+Td[i-1,j+1])
-        if i%10==0:
-            plt.plot(xx,Td[i,:],label='t='+str(i)+' h')
-            plt.legend()
-            plt.xlabel('Space domain (cm)')
-            plt.ylabel('Température')
-            plt.grid()
-            plt.title('Heat diffusion')
+        if plot==1:
+            if i%10==0:
+                plt.plot(xx,Td[i,:],label='t='+str(i)+' h')
+                plt.legend()
+                plt.xlabel('Space domain (cm)')
+                plt.ylabel('Température')
+                plt.grid()
+                plt.title('Heat diffusion')
     return Td
 
+#_________________________________________________________
+def LeftOp(X,dx,dt,K):
+    theta =0.5
+    A = K*dt*theta/(dx**2)
+    thA = theta*A
+    Z = -thA*np.roll(X,1) -thA*np.roll(X,-1) + (1+2*thA)*X
+    return Z
+
+def RightOp(X,dx,dt,K):
+    theta =0.5
+    A = K*dt*theta/(dx**2)
+    thA = theta*A
+    Z = (A-thA)*np.roll(X,1) + (A-thA)*np.roll(X,-1) + (1-2*A+2*thA)*X
+    return Z
+
+def CostFunc_CN(X, b,dx,dt,K):
+    return 0.5*np.dot(X,LeftOp(X,dx,dt,K)) - np.dot(X,b)
+
+def CostGrad_CN(X, b,dx,dt,K):
+    return LeftOp(X,dx,dt,K) - b
+
+def Crank_Nicolson(dx,limx,dt,limt,K,plot=0):
+    xx=np.arange(0,limx,dx)
+    tt=np.arange(0,limt,dt)
+    Tc=np.zeros((len(tt),len(xx)))
+    mu=50
+    s=5
+    Tc[0,:]=gauss(xx, mu, s)
+    #Conditions aux limites 
+    Tc[:,0]=np.zeros(len(tt))
+    #Td[:,1]=np.zeros(len(tt))
+    Tc[:,-1]=np.zeros(len(tt))
+    
+    
+    theta =0.5
+    A = K*dt*theta/(dx**2)
+    thA = theta*A
+
+    for i in range(1,len(tt)):
+        b = RightOp(Tc[i-1,:],dx,dt,K)
+        Xopt = Tc[i-1,:]
+    
+        res = so.minimize(CostFunc_CN, Xopt, args=(b,dx,dt,K),
+                          method='L-BFGS-B',
+                          jac=CostGrad_CN,
+                          options={'maxiter': 20})
+        Tc[i,:] = res['x']
+        if plot==1:
+            if i%10==0:
+                plt.plot(xx,Tc[i,:],label='t='+str(i)+' h')
+                plt.legend()
+                plt.xlabel('Space domain (cm)')
+                plt.ylabel('Température')
+                plt.grid()
+                plt.title('Heat diffusion')
+    return Tc
 
 
 #________________________________________________________________________________________
