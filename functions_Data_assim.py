@@ -121,7 +121,18 @@ def euler_f_BC_periodic(dx,dt,limx,limt,K,plot=0):    #euler forward  with reali
 
 
 
+def temp_cycle (tt,dt):
 
+    omega = 2*np.pi/(24) # period (minutes)
+    temp = 5 * ( 1.5 + np.sin(omega*tt) ) #amplitude 
+
+    m_series = np.empty(len(tt)) 
+    m = 0.
+
+    for i in range(len(tt)):
+        m = m + (temp[i] - 0.5 * m)*dt
+        m_series[i] = m
+    return m_series
 #_______________________________________________________________________________________________________________
 # DATA ASSIMILATION 
                     #3DVar
