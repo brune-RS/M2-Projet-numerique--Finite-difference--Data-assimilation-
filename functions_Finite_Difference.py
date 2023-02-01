@@ -7,13 +7,15 @@ import scipy.optimize as so
 
 
 #______________________________________________________
-def gauss(x,mu,s):
+#gaussian function x = vector of space domain  mu = mean value s= standard deviation
+def gauss(x,mu,s):   
         f=norm.pdf(x,mu,s)
         return f
+#calculates integral (area under a curve)
 def integral(Uin,dx):
      return np.sum(Uin*dx) 
     
-def RMSE(exact_solution, num_solution):
+def RMSE(exact_solution, num_solution): #Root Mean Square Error
 
     mean_of_differences_squared = ((exact_solution- num_solution)**2).mean() 
 
@@ -54,7 +56,6 @@ def analytical_solution(dx,limx,dt,limt,K,plot=0):
     U0=gauss(XX, mu, s)
     for it in range(len(tt)):
         t = tt[it]
-        ubis[it,0]=temp[it]
         ixx=0
         for ix in range(0,len(XX)):
             X=XX[ix]
@@ -67,7 +68,9 @@ def analytical_solution(dx,limx,dt,limt,K,plot=0):
                 ubis[it,ixx]=u[it,ix]
                 ixx+=1    
         if plot==1:
-            if it%10==0:
+            
+            if it%10==0 :
+                
                 plt.plot(xx,ubis[it,:],label='t='+str(it)+' s')
                 plt.legend()
                 plt.xlabel('Space domain (cm)')
@@ -135,7 +138,7 @@ def euler_b(dx,limx,dt,limt,K,plot=0):
     s=5  #standard dev   gaussian
     mu=50   #gaussian mean
 #_________________,_______________________________________    
-
+    Tb=np.zeros((len(tt),len(xx)))
 #Initiales conditions temperature T(0,x)   gaussian (xo,s)
     Tb[0,:]=gauss(xx, mu, s)
     # interior points
@@ -276,7 +279,7 @@ def Crank_Nicolson(dx,limx,dt,limt,K,plot=0):
                 plt.plot(xx,Tc[i,:],label='t='+str(i)+' h')
                 plt.legend()
                 plt.xlabel('Space domain (cm)')
-                plt.ylabel('Température')
+                plt.ylabel('Temperature  (°C)')
                 plt.grid()
                 plt.title('Heat diffusion')
     return Tc
