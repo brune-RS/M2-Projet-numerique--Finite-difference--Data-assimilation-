@@ -7,7 +7,7 @@
 
 Here are all the scripts, functions used during my project and those that allowed me to illustrate my results 
 
-- **Rapport_Numerical_Project_RAYNAUD--SCHEL_Brune**: Pdf file of the report 
+- **RAYNAUD--SCHEL_Brune....pdf**: Pdf file of the report 
 
 - **Functions_Data_assim.py:** Library with all the functions created and used in the script (Data assimilation part) 
 - **Functions_Finite_Difference.py:** Library with all the functions created and used in the script (Finite Difference part) 
